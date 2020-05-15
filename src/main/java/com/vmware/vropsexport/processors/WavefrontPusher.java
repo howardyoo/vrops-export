@@ -21,6 +21,7 @@ public class WavefrontPusher implements RowsetProcessor {
                 throw new ExporterException("Wavefront config must be specified for Wavefront output");
             }
             WavefrontConfig wfc = config.getWavefrontConfig();
+            int flushSize = config.getFlushSize();
             WavefrontSender sender = null;
             if(wfc.getProxyHost() != null) {
                 if(wfc.getWavefrontURL() != null || wfc.getToken() != null) {
@@ -38,7 +39,7 @@ public class WavefrontPusher implements RowsetProcessor {
                 WavefrontDirectIngestionClient.Builder b = new WavefrontDirectIngestionClient.Builder(wfc.getWavefrontURL(), wfc.getToken());
                 sender = b.build();
             }
-            return new WavefrontPusher(sender, dp);
+            return new WavefrontPusher(sender, dp, flushSize);
         }
 
         @Override
@@ -49,10 +50,16 @@ public class WavefrontPusher implements RowsetProcessor {
     private final DataProvider dp;
 
     private WavefrontSender sender;
+    private int flushSize = Config.DEFAULT_FLUSH_SIZE;
 
     public WavefrontPusher(WavefrontSender sender, DataProvider dp) {
         this.sender = sender;
         this.dp = dp;
+    }
+
+    public WavefrontPusher(WavefrontSender sender, DataProvider dp, int flushSize) {
+        this(sender, dp);
+        this.flushSize = flushSize;
     }
 
     @Override
@@ -63,6 +70,7 @@ public class WavefrontPusher implements RowsetProcessor {
     @Override
     public void process(Rowset rowset, RowMetadata meta) throws ExporterException {
         try {
+            int counter = 0;
             for (Row r : rowset.getRows().values()) {
                 long ts = r.getTimestamp();
                 String resourceName = dp.getResourceName(rowset.getResourceId());
@@ -82,6 +90,11 @@ public class WavefrontPusher implements RowsetProcessor {
                         tags.put(meta.getAliasForProp(prop.getKey()), r.getProp(p));
                     }
                     sender.sendMetric(meta.getAliasForMetric(metric.getKey()),d,ts/1000, resourceName, tags);
+                    counter++;
+                    if(counter % flushSize == 0) {
+                        sender.flush();
+                        counter = 0;
+                    }
                 }
             }
         } catch (IOException | HttpException e) {

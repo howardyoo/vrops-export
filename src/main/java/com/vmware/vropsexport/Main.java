@@ -224,7 +224,6 @@ public class Main {
 	}
 
 	private static Options defineOptions() {
-
 		Options opts = new Options();
 		opts.addOption("v", "verbose", false, "Print debug and timing information");
 		opts.addOption("d", "definition", true, "Path to definition file");
@@ -248,6 +247,7 @@ public class Main {
 		opts.addOption("G", "generate", true, "Generate template definition for resource type");
 		opts.addOption(null, "trustpass", true, "Truststore password (default=changeit)");
 		opts.addOption(null, "resfetch", true, "Resource fetch count (default=1000)");
+		opts.addOption( "f", "flush-size", true, "Number of records to send before flushing the Wavefront sender's output buffer (default=2000)");
 		opts.addOption("h", "help", false, "Print a short help text");
 		return opts;
 	}		

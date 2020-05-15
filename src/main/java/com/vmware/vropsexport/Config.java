@@ -24,6 +24,8 @@ import java.util.regex.Matcher;
 
 @SuppressWarnings("unused")
 public class Config {
+
+
 	@SuppressWarnings("unused")
     public static class Field {
 		private String alias;
@@ -74,6 +76,9 @@ public class Config {
 			return this.prop != null;
 		}
 	}
+
+	public static final int DEFAULT_FLUSH_SIZE = 2000;
+
 	private Field[] fields;
 	private String resourceType;
 	private String rollupType;
@@ -88,19 +93,24 @@ public class Config {
 	private String compactifyAlg = "LATEST";
 	private CSVConfig csvConfig;
 	private int align = 0;
+	private int flushSize = DEFAULT_FLUSH_SIZE;
 
 	public Config() {
 	}
 
-    public int getAlign() {
+	public int getFlushSize() { return flushSize; }
+
+	public void setFlushSize(int size) { flushSize = size; }
+
+    	public int getAlign() {
         return align;
     }
 
-    public void setAlign(int align) {
+    	public void setAlign(int align) {
         this.align = align;
     }
 
-    public Field[] getFields() {
+    	public Field[] getFields() {
 		return fields;
 	}
 
